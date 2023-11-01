@@ -22,55 +22,58 @@ function operate(firstNumber,operator,lastNumber){
 function displayScreen(){
     const mainDisplay=document.querySelector('.mainDisplay');
     if(expression=="Infinity"){
+        const subDisplay=document.querySelector('.subDisplay');
+        subDisplay.textContent="";
         mainDisplay.textContent="I see you're a fan of Buzz Lightyear";
         return;
     }
     mainDisplay.textContent=expression;
 }
 
-function displaySubScreen(firstNumber,lastNumber){
+function displaySubScreen(firstOperand,lastOperand){
     const subDisplay=document.querySelector('.subDisplay');
-    if(firstNumber && lastNumber)
-        subDisplay.textContent=`${firstNumber} ${operator} ${lastNumber}=`;
-    else
-        subDisplay.textContent=expression;
+
+    subDisplay.textContent=`${firstOperand} ${operator} ${lastOperand}=`;
 }
 
-function buildExpression(c){
+function buildExpression(input){
     let operators=['+','-','*','/','='];
-    let validFirstOperators=['+','-'];
-    let firstNumber,lastNumber;
-    if(operators.includes(c)){
+    let firstOperand,lastOperand;
+    if(operators.includes(input)){
+
+        //Handles the case when the expression is empty and the user wants to enter a negative number.
         if(expression==""){
-            if(validFirstOperators.includes(c))
-                expression+=c;
+            if(input=='-')
+                expression+=input;
         }
         else{
-            let lastChar=expression.charAt(expression.length-1);
-            if(!operators.includes(lastChar) && !operator){
-                if(c!="="){
-                    expression+=c;
-                    operator=c;
-                    displaySubScreen(firstNumber,lastNumber);
+            const lastChar=expression.charAt(expression.length-1);
+
+            //Checking if the last character is a number.
+            if(!operators.includes(lastChar)){
+                if(operator!=undefined){
+
+                    //Handles the case when subtracting with negative numbers where the general case fails.
+                    // Ex: -3-3, where the split in the gen case fails returning ['','3','3'].
+                    if(expression.charAt(0)=='-' && operator=='-'){
+                        [_,firstOperand,lastOperand]=expression.split(operator);
+                        firstOperand=`-${firstOperand}`;
+                    }
+                    else
+                        //Splits the string into its operands to perform the required operation.
+                        [firstOperand,lastOperand]=expression.split(operator);
+                    displaySubScreen(firstOperand,lastOperand);
+                    firstOperand=expression=operate(+firstOperand,operator,+lastOperand);
                 }
-            }
-            else if(!operators.includes(lastChar) && operator){
-                if(operator!="="){
-                    [firstNumber,lastNumber]=expression.split(operator);
-                    displaySubScreen(firstNumber,lastNumber);
-                    firstNumber=expression=operate(+firstNumber,operator,+lastNumber);
-                }
-                operator=c;
-                if(operator!="="){
-                    expression+=c;
-                }
+                //Ignoring the "=" because it should never be displayed on the screen.
+                operator=(input!="=")?input:undefined;
+                expression+=(input!="=")?input:"";
             }
         }
     }
-    else{
-        expression+=c;
-    }
-    displayScreen();  
+    else
+        expression+=input; //Appending to the expression if the input is an operand.
+    displayScreen();
 }
 
 function clearDisplay(){
